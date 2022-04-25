@@ -1,3 +1,5 @@
+var cubeRotation = 0.0;
+
 main();
 
 function main(){
@@ -22,24 +24,107 @@ function main(){
     const vsSource = `
         attribute vec4 aVertexPosition;
         attribute vec4 aVertexColor;
+        attribute vec2 aTexCoord;
 
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
+        uniform float uTime;
 
         varying lowp vec4 vColor;
+        varying vec2 vTexCoord;
+        varying float vTime;
 
         void main(){
             gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
             vColor = aVertexColor;
+            vTexCoord = aTexCoord;
+            vTime = uTime;
         }
     `;
     
     // sourcecode for fragment shader
-    const fsSource = `
-        varying lowp vec4 vColor;
+    const fsSource2 = `
+        precision mediump float;
 
-        void main() {
-            gl_FragColor = vColor;
+        varying lowp vec4 vColor;
+        varying vec2 vTexCoord;
+        varying float vTime;
+
+        float r;
+        float g;
+        float b;
+
+        vec4 color;
+
+        void main(){
+            r = vTexCoord.y;
+            g = vTexCoord.x;
+            b = sin(vTime);
+
+            color = vec4(r, g, b, 1.0);
+
+            gl_FragColor = color;
+        }
+        `;
+
+    const fsSource = `
+        precision mediump float;
+
+        varying vec2 vTexCoord;
+        varying float vTime;
+        
+        vec2 iResolution = vec2(1.0, 1.0);
+
+        float circle(vec2 pos, vec2 uv, float screenRatio, float size, vec3 color){
+            vec2 vectorFromCenter = pos - uv;
+            vectorFromCenter.y *= screenRatio;
+            float distFromCenter = length(vectorFromCenter);
+            float circle = smoothstep(size, size, distFromCenter);
+            //return color * (1.-circle);
+            return circle;
+        }
+
+        float castleRim(float x, float a, float phi){
+            float t = 1.;
+            float result = a * fract(x/t + phi);
+            return result;
+        }
+
+        float normSin(float x){
+            return sin(x)*0.5 + 0.5;
+        }
+
+        float normCos(float x){
+            return cos(x)*0.5 + 0.5;
+        }
+
+        void main()
+        {
+            // Normalized pixel coordinates (from 0 to 1)
+            vec2 uv = vTexCoord/iResolution.xy;
+            float screenRatio = iResolution.y / iResolution.x;
+            vec3 aColor = vec3(0.2, 0.1, 0.5);
+            float circleSize = 0.7;
+            vec2 pos = vec2(0.5, 0.5);
+            float saturation = 0.6;
+            
+            vec3 col = vec3(0.0, 0.0, 0.0);    
+        
+            for(float i = 1.; i < 100.; i++){
+                col += aColor * saturation * circle(pos, uv, screenRatio, circleSize, aColor);
+                circleSize *= 0.8;
+                //circleSize *= 0.8 + castleRim(vTime*1., 0.05, 0.);
+                saturation *= 0.99;
+                //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
+                
+                aColor *= 0.9;
+                pos.x *= (1. + sin(vTime)*0.05);
+                pos.y *= (1. + cos(vTime*1.1)*0.05);
+                circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
+            }
+
+
+            gl_FragColor = vec4(col,1.0);
         }
     `;
 
@@ -52,15 +137,30 @@ function main(){
         attribLocations: {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
             vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+            texCoord: gl.getAttribLocation(shaderProgram, 'aTexCoord')
         },
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+            time: gl.getUniformLocation(shaderProgram, 'uTime')
         },
     };
 
     const buffers = initBuffers(gl);
-    drawScene(gl, programInfo, buffers);
+
+    var then = 0;
+
+    //draw scene repeatedly
+    function render(now){
+        now *= 0.001;
+        const deltaTime = now - then;
+        then = now;
+        
+        drawScene(gl, programInfo, buffers, deltaTime, now);
+        
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
 }
 
 
@@ -114,10 +214,41 @@ function initBuffers(gl){
 
     // define the vertices
     const positions = [
-        1.0, 1.0,
-        -1.0, 1.0,
-        1.0, -1.0,
-        -1.0, -1.0
+        // front face
+        -1.0, -1.0, 1.0,
+        1.0, -1.0, 1.0,
+        1.0, 1.0, 1.0,
+        -1.0, 1.0, 1.0,
+
+        // back face
+        -1.0, -1.0, -1.0,
+        1.0, -1.0, -1.0,
+        1.0, 1.0, -1.0,
+        -1.0, 1.0, -1.0,
+
+        // top face
+        -1.0, -1.0, 1.0,
+        1.0, -1.0, 1.0,
+        1.0, -1.0, -1.0,
+        -1.0, -1.0, -1.0,
+
+        // bottom face
+        -1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0,
+        1.0, 1.0, -1.0,
+        -1.0, 1.0, -1.0,
+
+        // rigth face
+        -1.0, -1.0, 1.0,
+        -1.0, -1.0, -1.0,
+        -1.0, 1.0, -1.0,
+        -1.0, 1.0, 1.0,
+
+        // left face
+        1.0, -1.0, 1.0,
+        1.0, -1.0, -1.0,
+        1.0, 1.0, -1.0,
+        1.0, 1.0, 1.0,
     ]
 
     // create buffer object
@@ -135,12 +266,20 @@ function initBuffers(gl){
 
 
     // define colors
-    const colors = [
-        1.0, 1.0, 1.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-    ]
+    const faceColors = [
+        [1.0, 1.0, 1.0, 1.0],
+        [1.0, 0.0, 0.0, 1.0],
+        [0.0, 1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [1.0, 1.0, 0.0, 1.0],
+        [1.0, 0.0, 1.0, 1.0],
+    ];
+
+    var colors = [];
+    for (var j = 0; j < faceColors.length; j++){
+        const c = faceColors[j];
+        colors = colors.concat(c, c, c, c);
+    }
 
     // create buffer object
     const colorBuffer = gl.createBuffer();
@@ -154,15 +293,70 @@ function initBuffers(gl){
         gl.STATIC_DRAW);
 
 
+    // define element array
+    const indices = [
+        0,  1,  2,      0,  2,  3,    // front
+        4,  5,  6,      4,  6,  7,    // back
+        8,  9,  10,     8,  10, 11,   // top
+        12, 13, 14,     12, 14, 15,   // bottom
+        16, 17, 18,     16, 18, 19,   // right
+        20, 21, 22,     20, 22, 23,   // left
+      ];
+
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+
+    // define texture buffer
+    const cubeCoords = [
+        // Front
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Back
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Top
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Bottom
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Right
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Left
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+      ];
+
+    const textureBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cubeCoords), gl.STATIC_DRAW);
+
 
     // return buffers in a dictionary
     return{
         positions: positionBuffer,
         colors: colorBuffer,
+        texCoord: textureBuffer,
+        indices: indexBuffer,
     };
 }
 
-function drawScene(gl, programInfo, buffers){
+function drawScene(gl, programInfo, buffers, deltaTime, now){
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
@@ -192,10 +386,25 @@ function drawScene(gl, programInfo, buffers){
     mat4.translate(modelViewMatrix,     // destination matrix
                    modelViewMatrix,     // matrix to translate
                    [-0.0, 0.0, -6.0]);  // amount to translate
+
+    // translate and rotate model view matrix
+    cubeRotation += deltaTime;
+    
+    mat4.translate(modelViewMatrix,
+                   modelViewMatrix,
+                   [-0.0, 0.0, -3.0])
+
+    mat4.rotate(modelViewMatrix,
+                modelViewMatrix,
+                cubeRotation,
+                [0.3, 0.6, 1]);
+
+    // set time uniform
+    gl.uniform1f(programInfo.uniformLocations.time, now);
         
     // setup transfer from position buffer to vertexPosition attribute
     {
-        const numComponents = 2;
+        const numComponents = 3;
         const type = gl.FLOAT;
         const normalize = false;
         const stride = 0;
@@ -232,6 +441,26 @@ function drawScene(gl, programInfo, buffers){
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
     }
 
+    // setup transfer from texture buffer to aTexCoord attribute
+    {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.texCoord)
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.texCoord,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset
+        )
+        gl.enableVertexAttribArray(programInfo.attribLocations.texCoord);
+    }
+
     //specify program to be used
     gl.useProgram(programInfo.program);
 
@@ -245,10 +474,12 @@ function drawScene(gl, programInfo, buffers){
         programInfo.uniformLocations.modelViewMatrix,
         false,
         modelViewMatrix);
-    
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
     {
+        const vertexCount = 36;
+        const type = gl.UNSIGNED_SHORT;
         const offset = 0;
-        const vertexCount = 4;
-        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
     }
 }
