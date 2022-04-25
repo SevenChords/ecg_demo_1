@@ -1,4 +1,6 @@
-var cubeRotation = 0.0;
+var cubeRotation_x = 0.0;
+var cubeRotation_y = 0.0;
+var cubeRotation_z = 0.0;
 
 main();
 
@@ -43,30 +45,6 @@ function main(){
     `;
     
     // sourcecode for fragment shader
-    const fsSource2 = `
-        precision mediump float;
-
-        varying lowp vec4 vColor;
-        varying vec2 vTexCoord;
-        varying float vTime;
-
-        float r;
-        float g;
-        float b;
-
-        vec4 color;
-
-        void main(){
-            r = vTexCoord.y;
-            g = vTexCoord.x;
-            b = sin(vTime);
-
-            color = vec4(r, g, b, 1.0);
-
-            gl_FragColor = color;
-        }
-        `;
-
     const fsSource = `
         precision mediump float;
 
@@ -74,6 +52,12 @@ function main(){
         varying float vTime;
         
         vec2 iResolution = vec2(1.0, 1.0);
+
+        uniform float x_rot;
+        uniform float y_rot;
+        uniform float z_rot;
+
+        float PI = 3.14159265359;
 
         float circle(vec2 pos, vec2 uv, float screenRatio, float size, vec3 color){
             vec2 vectorFromCenter = pos - uv;
@@ -118,9 +102,10 @@ function main(){
                 //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
                 
                 aColor *= 0.9;
-                pos.x *= (1. + sin(vTime)*0.05);
-                pos.y *= (1. + cos(vTime*1.1)*0.05);
-                circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
+                //pos.x *= (1. + sin(vTime)*0.05);
+                pos.x -= ((mod(y_rot+PI, 2.*PI)) - PI) * 0.2 * PI;
+                //pos.y *= (1. + cos(vTime*1.1)*0.05);
+                //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
             }
 
 
@@ -142,7 +127,10 @@ function main(){
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-            time: gl.getUniformLocation(shaderProgram, 'uTime')
+            time: gl.getUniformLocation(shaderProgram, 'uTime'),
+            x_rot: gl.getUniformLocation(shaderProgram, 'x_rot'),
+            y_rot: gl.getUniformLocation(shaderProgram, 'y_rot'),
+            z_rot: gl.getUniformLocation(shaderProgram, 'z_rot')
         },
     };
 
@@ -214,41 +202,41 @@ function initBuffers(gl){
 
     // define the vertices
     const positions = [
-        // front face
-        -1.0, -1.0, 1.0,
-        1.0, -1.0, 1.0,
-        1.0, 1.0, 1.0,
-        -1.0, 1.0, 1.0,
+        // Front face
+        -1.0, -1.0,  1.0,
+        1.0, -1.0,  1.0,
+        1.0,  1.0,  1.0,
+        -1.0,  1.0,  1.0,
 
-        // back face
-        -1.0, -1.0, -1.0,
-        1.0, -1.0, -1.0,
-        1.0, 1.0, -1.0,
-        -1.0, 1.0, -1.0,
-
-        // top face
-        -1.0, -1.0, 1.0,
-        1.0, -1.0, 1.0,
+        // Back face
         1.0, -1.0, -1.0,
         -1.0, -1.0, -1.0,
+        -1.0,  1.0, -1.0,
+        1.0,  1.0, -1.0,
 
-        // bottom face
-        -1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0,
-        1.0, 1.0, -1.0,
-        -1.0, 1.0, -1.0,
+        // Top face
+        -1.0,  1.0, -1.0,
+        -1.0,  1.0,  1.0,
+        1.0,  1.0,  1.0,
+        1.0,  1.0, -1.0,
 
-        // rigth face
-        -1.0, -1.0, 1.0,
+        // Bottom face
         -1.0, -1.0, -1.0,
-        -1.0, 1.0, -1.0,
-        -1.0, 1.0, 1.0,
-
-        // left face
-        1.0, -1.0, 1.0,
         1.0, -1.0, -1.0,
-        1.0, 1.0, -1.0,
-        1.0, 1.0, 1.0,
+        1.0, -1.0,  1.0,
+        -1.0, -1.0,  1.0,
+
+        // Right face
+        1.0, -1.0,  1.0,
+        1.0, -1.0, -1.0,
+        1.0,  1.0, -1.0,
+        1.0,  1.0,  1.0,
+
+        // Left face
+        -1.0, -1.0, -1.0,
+        -1.0, -1.0,  1.0,
+        -1.0,  1.0,  1.0,
+        -1.0,  1.0, -1.0,
     ]
 
     // create buffer object
@@ -387,20 +375,31 @@ function drawScene(gl, programInfo, buffers, deltaTime, now){
                    modelViewMatrix,     // matrix to translate
                    [-0.0, 0.0, -6.0]);  // amount to translate
 
-    // translate and rotate model view matrix
-    cubeRotation += deltaTime;
-    
+    // translate model view matrix    
     mat4.translate(modelViewMatrix,
                    modelViewMatrix,
-                   [-0.0, 0.0, -3.0])
-
+                   [-0.0, 0.0, 1.0])
+    
+    // rotate modelviewmatrix around x-axis
+    //cubeRotation_x += deltaTime;
     mat4.rotate(modelViewMatrix,
                 modelViewMatrix,
-                cubeRotation,
-                [0.3, 0.6, 1]);
+                cubeRotation_x,
+                [1.0, 0.0, 0.0]);
 
-    // set time uniform
-    gl.uniform1f(programInfo.uniformLocations.time, now);
+    // rotate modelviewmatrix around y-axis
+    cubeRotation_y += deltaTime*0.3;
+    mat4.rotate(modelViewMatrix,
+                modelViewMatrix,
+                cubeRotation_y,
+                [0.0, 1.0, 0.0]);
+
+    // rotate modelviewmatrix around z-axis
+    //cubeRotation_z += deltaTime;
+    mat4.rotate(modelViewMatrix,
+                modelViewMatrix,
+                cubeRotation_z,
+                [0.0, 0.0, 1.0]);
         
     // setup transfer from position buffer to vertexPosition attribute
     {
@@ -474,6 +473,13 @@ function drawScene(gl, programInfo, buffers, deltaTime, now){
         programInfo.uniformLocations.modelViewMatrix,
         false,
         modelViewMatrix);
+
+    gl.uniform1f(programInfo.uniformLocations.time, now);
+
+    gl.uniform1f(programInfo.uniformLocations.x_rot, cubeRotation_x);
+    gl.uniform1f(programInfo.uniformLocations.y_rot, cubeRotation_y);
+    gl.uniform1f(programInfo.uniformLocations.z_rot, cubeRotation_z);
+
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
     {
