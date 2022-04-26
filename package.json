@@ -1,0 +1,22 @@
+{
+  "name": "ecg_demo_1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "three.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SevenChords/ecg_demo_1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SevenChords/ecg_demo_1/issues"
+  },
+  "homepage": "https://github.com/SevenChords/ecg_demo_1#readme",
+  "dependencies": {
+    "three": "^0.139.2"
+  }
+}

@@ -4,10 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Rot WebGL</title> 
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.js"></script> -->
 </head>
 <body>
-    <canvas id="glCanvas" width=1920 height=1280></canvas>
+    
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js" integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="main.js"></script>
+
+<script type="not-javascript" id="vertexShader">
+        attribute vec4 position;
+       
+        attribute vec2 uv;
+
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        uniform float u_time;
+
+        varying lowp vec4 vColor;
+        varying vec2 vTexCoord;
+        varying float vTime;
+       
+
+        void main(){
+            gl_Position = projectionMatrix * modelViewMatrix * position;
+            vColor = vec4(1.0);
+            vTexCoord = uv;
+            vTime = u_time;
+        }
+</script>
+
+<script id="fragmentShader" type="not-javascript">
+    precision mediump float;
+
+        varying vec2 vTexCoord;
+        varying float vTime;
+        
+        vec2 iResolution = vec2(1.0, 1.0);
+
+        uniform float x_rot;
+        uniform float y_rot;
+        uniform float z_rot;
+
+        float PI = 3.14159265359;
+
+        float circle(vec2 pos, vec2 uv, float screenRatio, float size, vec3 color){
+            vec2 vectorFromCenter = pos - uv;
+            vectorFromCenter.y *= screenRatio;
+            float distFromCenter = length(vectorFromCenter);
+            float circle = smoothstep(size, size, distFromCenter);
+            //return color * (1.-circle);
+            return circle;
+        }
+
+        float castleRim(float x, float a, float phi){
+            float t = 1.;
+            float result = a * fract(x/t + phi);
+            return result;
+        }
+
+        float normSin(float x){
+            return sin(x)*0.5 + 0.5;
+        }
+
+        float normCos(float x){
+            return cos(x)*0.5 + 0.5;
+        }
+
+        void main()
+        {
+            // Normalized pixel coordinates (from 0 to 1)
+            vec2 uv = vTexCoord/iResolution.xy;
+            float screenRatio = iResolution.y / iResolution.x;
+            vec3 aColor = vec3(0.2, 0.1, 0.5);
+            float circleSize = 0.7;
+            vec2 pos = vec2(0.5, 0.5);
+            float saturation = 0.6;
+            
+            vec3 col = vec3(0.0, 0.0, 0.0);    
+        
+            for(float i = 1.; i < 100.; i++){
+                col += aColor * saturation * circle(pos, uv, screenRatio, circleSize, aColor);
+                circleSize *= 0.8;
+                //circleSize *= 0.8 + castleRim(vTime*1., 0.05, 0.);
+                saturation *= 0.99;
+                //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
+                
+                aColor *= 0.9;
+                //pos.x *= (1. + sin(vTime)*0.05);
+                pos.x -= ((mod(y_rot+PI, 2.*PI)) - PI) * 0.2 * PI;
+                //pos.y *= (1. + cos(vTime*1.1)*0.05);
+                //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
+            }
+
+
+            gl_FragColor = vec4(col,1.0);
+        }
+</script>
+<script type="module" src="./three.js" defer></script>
+
+<!-- <script src="main.js"></script> -->
 </html> 
