@@ -27,45 +27,130 @@ const material = new THREE.RawShaderMaterial( {
 } );
 
 const mesh = new THREE.Mesh( geometry, material );
-mesh.position.z = -1;
+mesh.position.z = 1;
+mesh.position.x = -1;
+mesh.position.y = -1;
+
 scene.add( mesh );
 
 
+
+/////////////////
+/*
+/*
+//CAMERA CONTROL
+/*
+/*
+///////////////*/
+
+let moveStep = 0.1;
+let shiftPressed = false;
 
 //the camera rotation pivot
 let orbit = new THREE.Object3D();
 orbit.rotation.order = "YXZ"; //this is important to keep level, so Z should be the last axis to rotate in order...
 orbit.position.copy( mesh.position );
 scene.add(orbit );
-let moveCamera = false;
-let mouseLastX;
-let mouseLastY;
-document.addEventListener('mousedown', function(e){
-	moveCamera = true;
-	mouseLastX = e.offsetX;
-	mouseLastY = e.offsetY;
-})
-document.addEventListener('mousemove', function(e){
-	if(moveCamera){
-		let scale = 0.008;
-		
-		orbit.rotateX( (mouseLastY - e.offsetY) * scale );
-		orbit.rotateY( (mouseLastX - e.offsetX) * scale ); 
-		orbit.rotation.z = 0; //this is important to keep the camera level..
-		mouseLastX = e.offsetX;
-	mouseLastY = e.offsetY;
-	}
-   
-})
-document.addEventListener('mouseup', function(e){
-	moveCamera = false;
-})
 
 //offset the camera and add it to the pivot
 //you could adapt the code so that you can 'zoom' by changing the z value in camera.position in a mousewheel event..
 let cameraDistance = 4;
-camera.position.z = cameraDistance;
+
 orbit.add( camera );
+camera.position.z = cameraDistance;
+let zoomScale = 1;
+
+let moveCamera = false;
+let mouseLastX;
+let mouseLastY;
+
+document.addEventListener('mousedown', function(e){
+	moveCamera = true;
+	mouseLastX = e.offsetX;
+	mouseLastY = e.offsetY;
+});
+document.addEventListener('mousemove', function(e){
+	if(moveCamera){
+		let scale = 0.008;
+		if(shiftPressed){
+			orbit.translateY( -(mouseLastY - e.offsetY) * scale );
+			orbit.translateX( (mouseLastX - e.offsetX) * scale ); 
+			orbit.rotation.z = 0; //this is important to keep the camera level..
+		}
+		else{
+			orbit.rotateX( (mouseLastY - e.offsetY) * scale );
+			orbit.rotateY( (mouseLastX - e.offsetX) * scale ); 
+			orbit.rotation.z = 0; //this is important to keep the camera level..
+		}
+		
+		mouseLastX = e.offsetX;
+		mouseLastY = e.offsetY;
+	}
+});
+document.addEventListener('mouseup', function(e){
+	moveCamera = false;
+});
+document.addEventListener('mouseup', function(e){
+	moveCamera = false;
+});
+
+document.addEventListener('keydown', (event) => {
+	const keyName = event.key;
+
+	if (keyName === "a") {
+	  orbit.translateX(-moveStep);
+	  console.log("move left")
+	  return;
+	}
+	if (keyName === "d") {
+	  orbit.translateX(moveStep);
+	  console.log("move left")
+	  return;
+	}
+	if (keyName === "w") {
+	  orbit.translateZ(-moveStep);
+	  console.log("move left")
+	  return;
+	}
+	if (keyName === "s") {
+	  orbit.translateZ(moveStep);
+	  console.log("move left")
+	  return;
+	}
+	if (keyName === "Shift") {
+	  shiftPressed = true;
+	  return;
+	}
+});
+document.addEventListener('keyup', (event) => {
+	const keyName = event.key;
+	if (keyName === "Shift") {
+		shiftPressed = false;
+		return;
+	  }
+});
+
+
+function zoom(event) {
+	event.preventDefault();
+	console.log(event.deltaY);
+	zoomScale = event.deltaY * 0.01;
+  
+	// Restrict scale
+	// zoomScale = Math.min(Math.max(.125, zoomScale), 4);
+	orbit.translateZ(zoomScale);
+	// Apply scale transform
+
+  }
+
+window.onwheel = zoom;
+
+
+///CAMERA CONTROL - END
+///////////////////////
+
+
+
 
 const renderer = new THREE.WebGLRenderer( { antialias: true } );
 renderer.setSize( window.innerWidth, window.innerHeight );
