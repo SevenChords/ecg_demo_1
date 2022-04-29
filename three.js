@@ -39,6 +39,7 @@ scene.add( mesh );
 /*
 /*
 //CAMERA CONTROL
+Coded with a little Help from Ethan Hermsey at https://stackoverflow.com/questions/60678494/orbit-controls-follow-the-mouse-without-clicking-three-js
 /*
 /*
 ///////////////*/
@@ -99,22 +100,22 @@ document.addEventListener('keydown', (event) => {
 
 	if (keyName === "a") {
 	  orbit.translateX(-moveStep);
-	  console.log("move left")
+	  
 	  return;
 	}
 	if (keyName === "d") {
 	  orbit.translateX(moveStep);
-	  console.log("move left")
+	 
 	  return;
 	}
 	if (keyName === "w") {
 	  orbit.translateZ(-moveStep);
-	  console.log("move left")
+	  
 	  return;
 	}
 	if (keyName === "s") {
 	  orbit.translateZ(moveStep);
-	  console.log("move left")
+	 
 	  return;
 	}
 	if (keyName === "Shift") {
