@@ -15,6 +15,7 @@
         attribute vec4 position;
        
         attribute vec2 uv;
+        attribute vec3 normal;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
@@ -23,6 +24,7 @@
         varying lowp vec4 vColor;
         varying vec2 vTexCoord;
         varying float vTime;
+        varying vec3 vNormal;
        
 
         void main(){
@@ -30,6 +32,7 @@
             vColor = vec4(1.0);
             vTexCoord = uv;
             vTime = u_time;
+            vNormal = normal;
         }
 </script>
 
@@ -38,7 +41,9 @@
 
         varying vec2 vTexCoord;
         varying float vTime;
+        varying vec3 vNormal;
         
+
         vec2 iResolution = vec2(1.0, 1.0);
 
         uniform float x_rot;
@@ -72,32 +77,46 @@
 
         void main()
         {
-            // Normalized pixel coordinates (from 0 to 1)
-            vec2 uv = vTexCoord/iResolution.xy;
-            float screenRatio = iResolution.y / iResolution.x;
-            vec3 aColor = vec3(0.2, 0.1, 0.5);
-            float circleSize = 0.7;
-            vec2 pos = vec2(0.5, 0.5);
-            float saturation = 0.6;
-            
-            vec3 col = vec3(0.0, 0.0, 0.0);    
-        
-            for(float i = 1.; i < 100.; i++){
-                col += aColor * saturation * circle(pos, uv, screenRatio, circleSize, aColor);
-                circleSize *= 0.8;
-                //circleSize *= 0.8 + castleRim(vTime*1., 0.05, 0.);
-                saturation *= 0.99;
-                //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
+
+            //Shader Side 1
+            if(normalize(vNormal).x == 1.0){
+                // Normalized pixel coordinates (from 0 to 1)
+                vec2 uv = vTexCoord/iResolution.xy;
+                float screenRatio = iResolution.y / iResolution.x;
+                vec3 aColor = vec3(0.2, 0.1, 0.5);
+                float circleSize = 0.7;
+                vec2 pos = vec2(0.5, 0.5);
+                float saturation = 0.6;
                 
-                aColor *= 0.9;
-                //pos.x *= (1. + sin(vTime)*0.05);
-                pos.x -= ((mod(y_rot+PI, 2.*PI)) - PI) * 0.2 * PI;
-                //pos.y *= (1. + cos(vTime*1.1)*0.05);
-                //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
+                vec3 col = vec3(0.0, 0.0, 0.0);    
+            
+                for(float i = 1.; i < 100.; i++){
+                    col += aColor * saturation * circle(pos, uv, screenRatio, circleSize, aColor);
+                    circleSize *= 0.8;
+                    //circleSize *= 0.8 + castleRim(vTime*1., 0.05, 0.);
+                    saturation *= 0.99;
+                    //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
+                    
+                    aColor *= 0.9;
+                    //pos.x *= (1. + sin(vTime)*0.05);
+                    pos.x -= ((mod(y_rot+PI, 2.*PI)) - PI) * 0.2 * PI;
+                    //pos.y *= (1. + cos(vTime*1.1)*0.05);
+                    //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
+                }
+
+
+                gl_FragColor = vec4(col,1.0);
+            
+                
             }
 
 
-            gl_FragColor = vec4(col,1.0);
+            //Shader side 2
+            if(normalize(vNormal).z == 1.0){
+                gl_FragColor = vec4(1.0, 1.0, 0, 1);
+            }
+           
+            
         }
 </script>
 <script type="module" src="./three.js" defer></script>
