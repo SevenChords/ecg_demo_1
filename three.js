@@ -16,6 +16,7 @@ const uniforms = {
     u_resolution: { value: { x: null, y: null } },
     u_time: { value: 0.0 },
     u_mouse: { value: { x: null, y: null } },
+	u_eulerAngles: new THREE.Uniform( new THREE.Vector3() ),
   }
 
 const material = new THREE.RawShaderMaterial( {
@@ -33,7 +34,13 @@ mesh.position.y = -1;
 
 scene.add( mesh );
 
-
+function getEulerAngles(mvMatrix)
+{
+	// todo rotation in abhängigkeit von vector zwischen Kamereaposition und Würfel Mittelpunkt implementieren
+	const eulerAngles = new THREE.Euler();
+	eulerAngles.setFromRotationMatrix(mvMatrix);
+	return eulerAngles;
+}
 
 /////////////////
 /*
@@ -151,9 +158,8 @@ window.onwheel = zoom;
 ///////////////////////
 
 
-
-
 const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.debug.checkShaderErrors = true
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setAnimationLoop( animation );
 document.body.appendChild( renderer.domElement );
@@ -165,10 +171,13 @@ console.log(scene.children[0]);
 // animation
 
 function animation( time ) {
-    
-	
+    	
+	const eulerAngles = getEulerAngles(camera.matrixWorldInverse);
+
+	console.log(eulerAngles);
+   	uniforms.u_eulerAngles.value = eulerAngles;
+
 	// mesh.rotation.y = time / 2000;
-   
     uniforms.u_time.value = time;
 	renderer.render( scene, camera );
 

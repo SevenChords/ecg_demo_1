@@ -44,18 +44,17 @@
 <script id="fragmentShader" type="not-javascript">
     precision mediump float;
 
+        uniform vec3 u_eulerAngles;
+
         varying vec2 vTexCoord;
         varying float vTime;
-        varying vec3 vNormal;
-        
+        varying vec3 vNormal;        
 
         vec2 iResolution = vec2(1.0, 1.0);
 
-        uniform float x_rot;
-        uniform float y_rot;
-        uniform float z_rot;
-
         float PI = 3.14159265359;
+
+        float perspeciveFactor = 0.3;
 
         float circle(vec2 pos, vec2 uv, float screenRatio, float size, vec3 color){
             vec2 vectorFromCenter = pos - uv;
@@ -80,41 +79,43 @@
             return cos(x)*0.5 + 0.5;
         }
 
+        vec4 renderTunnel(){
+            // Normalized pixel coordinates (from 0 to 1)
+            vec2 uv = vTexCoord/iResolution.xy;
+            float screenRatio = iResolution.y / iResolution.x;
+            vec3 aColor = vec3(0.2, 0.1, 0.5);
+            float circleSize = 0.7;
+            vec2 pos = vec2(0.5, 0.5);
+            float saturation = 0.6;
+            
+            vec3 col = vec3(0.0, 0.0, 0.0);  
+        
+            for(float i = 1.; i < 20.; i++){
+                col += aColor * saturation * circle(pos, uv, screenRatio, circleSize, aColor);
+                circleSize *= 0.8;
+                //circleSize *= 0.8 + castleRim(vTime*1., 0.05, 0.);
+                saturation *= 0.99;
+                //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
+                
+                aColor *= 0.9;
+                //pos.x *= (1. + sin(vTime)*0.05);
+                //pos.y *= (1. + cos(vTime*1.1)*0.05);
+
+                pos.x -= u_eulerAngles.y * perspeciveFactor;
+                pos.y += u_eulerAngles.x * perspeciveFactor;
+                
+                //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
+                }
+            return vec4(col,1.0);
+        }
+
         void main()
         {
 
             //Shader Side 1
             if(normalize(vNormal).x == 1.0){
-                // Normalized pixel coordinates (from 0 to 1)
-                vec2 uv = vTexCoord/iResolution.xy;
-                float screenRatio = iResolution.y / iResolution.x;
-                vec3 aColor = vec3(0.2, 0.1, 0.5);
-                float circleSize = 0.7;
-                vec2 pos = vec2(0.5, 0.5);
-                float saturation = 0.6;
-                
-                vec3 col = vec3(0.0, 0.0, 0.0);    
-            
-                for(float i = 1.; i < 100.; i++){
-                    col += aColor * saturation * circle(pos, uv, screenRatio, circleSize, aColor);
-                    circleSize *= 0.8;
-                    //circleSize *= 0.8 + castleRim(vTime*1., 0.05, 0.);
-                    saturation *= 0.99;
-                    //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
-                    
-                    aColor *= 0.9;
-                    //pos.x *= (1. + sin(vTime)*0.05);
-                    pos.x -= ((mod(y_rot+PI, 2.*PI)) - PI) * 0.2 * PI;
-                    //pos.y *= (1. + cos(vTime*1.1)*0.05);
-                    //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
-                }
-
-
-                gl_FragColor = vec4(col,1.0);
-            
-                
+                gl_FragColor = vec4(0.0, 1.0, 1.0, 1);
             }
-
 
             //Shader side 2
             if(normalize(vNormal).x == -1.0){
@@ -130,7 +131,7 @@
             }
             //Shader side 5
             if(normalize(vNormal).z == 1.0){
-                gl_FragColor = vec4(0.0, 1.0, 1.0, 1);
+                gl_FragColor = renderTunnel();
             }
             //Shader side 6
             if(normalize(vNormal).z == -1.0){
