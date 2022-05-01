@@ -37,7 +37,7 @@ function main(){
         varying float vTime;
 
         void main(){
-            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+            gl_Position = uProjectionMatrix * uModelViewMatrix *  uTime;
             vColor = aVertexColor;
             vTexCoord = aTexCoord;
             vTime = uTime;
