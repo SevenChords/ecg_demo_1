@@ -26,7 +26,7 @@ const material = new THREE.RawShaderMaterial( {
 	fragmentShader: document.getElementById('fragmentShader').textContent,
    
 } );
-material.needsUpdate = true
+material.needsUpdate = true;
 
 const mesh = new THREE.Mesh( geometry, material );
 mesh.position.z = 1;
@@ -179,10 +179,7 @@ function animation( time ) {
    	uniforms.u_eulerAngles.value = eulerAngles;
 
 	// mesh.rotation.y = time / 2000;
-   
-    material.uniforms.u_time.value = time/10000;
-	material.uniforms.needsUpdate = true;
-	mesh.position.y = uniforms.u_time.value/2000000;
+    uniforms.u_time.value = time;
 	renderer.render( scene, camera );
 
 }
