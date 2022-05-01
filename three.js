@@ -37,9 +37,19 @@ scene.add( mesh );
 
 function getEulerAngles(mvMatrix)
 {
+	var eulerAngles = [];
 	// todo rotation in abhängigkeit von vector zwischen Kamereaposition und Würfel Mittelpunkt implementieren
-	const eulerAngles = new THREE.Euler();
-	eulerAngles.setFromRotationMatrix(mvMatrix);
+	for (var i = 0; i < 4; i++){
+		const euler = new THREE.Euler();
+		const rotatedMatrix = new THREE.Matrix4();
+		rotatedMatrix.set(mvMatrix);
+		rotatedMatrix.makeRotationY(Math.PI/2 * (i));
+		euler.setFromRotationMatrix(rotatedMatrix);
+		var eulerArray = []
+		euler.toArray(eulerArray);
+		eulerAngles.push(eulerArray);
+	}
+	
 	return eulerAngles;
 }
 

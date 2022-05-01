@@ -44,7 +44,7 @@
 <script id="fragmentShader" type="not-javascript">
     precision mediump float;
 
-        uniform vec3 u_eulerAngles;
+        uniform mat4 u_eulerAngles;
 
         varying vec2 vTexCoord;
         varying float vTime;
@@ -101,8 +101,8 @@
                 //pos.x *= (1. + sin(vTime)*0.05);
                 //pos.y *= (1. + cos(vTime*1.1)*0.05);
 
-                pos.x -= u_eulerAngles.y * perspeciveFactor;
-                pos.y += u_eulerAngles.x * perspeciveFactor;
+                pos.x -= u_eulerAngles[0].y * perspeciveFactor;
+                pos.y += u_eulerAngles[0].x * perspeciveFactor;
                 
                 //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
                 }
