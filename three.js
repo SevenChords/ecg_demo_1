@@ -16,7 +16,7 @@ const uniforms = {
     u_resolution: { value: { x: null, y: null } },
     u_time: { value: 0.0 },
     u_mouse: { value: { x: null, y: null } },
-	u_eulerAngles: new THREE.Uniform( new THREE.Vector3() ),
+	u_eulerAngles: new THREE.Uniform( new THREE.Matrix4() ),
   }
 
 const material = new THREE.RawShaderMaterial( {
@@ -35,22 +35,33 @@ mesh.position.y = -1;
 
 scene.add( mesh );
 
-function getEulerAngles(mvMatrix)
+function getEulerAngles_asmat4(mvMatrix)
 {
 	var eulerAngles = [];
 	// todo rotation in abhängigkeit von vector zwischen Kamereaposition und Würfel Mittelpunkt implementieren
 	for (var i = 0; i < 4; i++){
-		const euler = new THREE.Euler();
-		const rotatedMatrix = new THREE.Matrix4();
-		rotatedMatrix.set(mvMatrix);
-		rotatedMatrix.makeRotationY(Math.PI/2 * (i));
-		euler.setFromRotationMatrix(rotatedMatrix);
+		mvMatrix.makeRotationY(Math.PI/2 * (i+1));
+		/* const neutralMatrix = new THREE.Matrix4();
+		neutralMatrix.set(
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1,
+		);
+		var rotationMatrix = new THREE.Matrix4();
+		rotationMatrix = mvMatrix.extractRotation(neutralMatrix); */
+		var euler = new THREE.Euler();
+		euler.setFromRotationMatrix(mvMatrix);
 		var eulerArray = []
 		euler.toArray(eulerArray);
-		eulerAngles.push(eulerArray);
+		eulerAngles.push(eulerArray[0]);
+		eulerAngles.push(eulerArray[1]);
+		eulerAngles.push(eulerArray[2]);
+		eulerAngles.push(eulerArray[3]);
 	}
-	
-	return eulerAngles;
+	var eulerMatrix = new THREE.Matrix4()
+	eulerMatrix.fromArray(eulerAngles);
+	return eulerMatrix;
 }
 
 /////////////////
@@ -182,8 +193,8 @@ console.log(scene.children[0]);
 // animation
 
 function animation( time ) {
-    	
-	const eulerAngles = getEulerAngles(camera.matrixWorldInverse);
+    
+	const eulerAngles = getEulerAngles_asmat4(camera.matrixWorldInverse);
 
 	console.log(eulerAngles);
    	uniforms.u_eulerAngles.value = eulerAngles;

@@ -101,8 +101,8 @@
                 //pos.x *= (1. + sin(vTime)*0.05);
                 //pos.y *= (1. + cos(vTime*1.1)*0.05);
 
-                pos.x -= u_eulerAngles[0].y * perspeciveFactor;
-                pos.y += u_eulerAngles[0].x * perspeciveFactor;
+                pos.x -= u_eulerAngles[1][1] * perspeciveFactor;
+                pos.y += u_eulerAngles[0][0] * perspeciveFactor;
                 
                 //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
                 }
@@ -114,7 +114,7 @@
 
             //Shader Side 1
             if(normalize(vNormal).x == 1.0){
-                gl_FragColor = vec4(0.0, 1.0, 1.0, 1);
+                gl_FragColor = renderTunnel();
             }
 
             //Shader side 2
@@ -131,7 +131,7 @@
             }
             //Shader side 5
             if(normalize(vNormal).z == 1.0){
-                gl_FragColor = renderTunnel();
+                gl_FragColor = vec4(0.0, 1.0, 1.0, 1);
             }
             //Shader side 6
             if(normalize(vNormal).z == -1.0){
