@@ -100,9 +100,11 @@
                 aColor *= 0.9;
                 //pos.x *= (1. + sin(vTime)*0.05);
                 //pos.y *= (1. + cos(vTime*1.1)*0.05);
-
+                
+                // mat4 indexing: m[row][column]
+                
                 pos.x -= u_eulerAngles[1][1] * perspeciveFactor;
-                pos.y += u_eulerAngles[0][0] * perspeciveFactor;
+                pos.y += u_eulerAngles[1][0] * perspeciveFactor;
                 
                 //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
                 }

@@ -40,7 +40,12 @@ function getEulerAngles_asmat4(mvMatrix)
 	var eulerAngles = [];
 	// todo rotation in abhängigkeit von vector zwischen Kamereaposition und Würfel Mittelpunkt implementieren
 	for (var i = 0; i < 4; i++){
-		mvMatrix.makeRotationY(Math.PI/2 * (i+1));
+
+		var rotationMatrix = new THREE.Matrix4();
+		rotationMatrix.makeRotationY(Math.PI/2 * i);
+		mvMatrix.multiply(rotationMatrix);
+
+
 		/* const neutralMatrix = new THREE.Matrix4();
 		neutralMatrix.set(
 			1, 0, 0, 0,
