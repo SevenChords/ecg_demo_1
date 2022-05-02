@@ -35,7 +35,7 @@ mesh.position.y = -1;
 
 scene.add( mesh );
 
-function getEulerAngles_asmat4(mvMatrix)
+function getEulerAngels(mvMatrix)
 {
 	var eulerAngles = [];
 	// todo rotation in abhängigkeit von vector zwischen Kamereaposition und Würfel Mittelpunkt implementieren
@@ -199,7 +199,8 @@ console.log(scene.children[0]);
 
 function animation( time ) {
     
-	const eulerAngles = getEulerAngles_asmat4(camera.matrixWorldInverse);
+	const eulerAngles = getEulerAngels
+(camera.matrixWorldInverse);
 
 	console.log(eulerAngles);
    	uniforms.u_eulerAngles.value = eulerAngles;
