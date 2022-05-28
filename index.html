@@ -18,18 +18,21 @@
 
 <script type="not-javascript" id="vertexShader">
         attribute vec4 position;
-       
         attribute vec2 uv;
         attribute vec3 normal;
+        attribute vec3 tangent;
 
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
         uniform float u_time;
+        uniform vec3 u_cameraPosition;
 
         varying lowp vec4 vColor;
         varying vec2 vTexCoord;
         varying float vTime;
         varying vec3 vNormal;
+
+        vec2 perspective;
        
 
         void main(){

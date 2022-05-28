@@ -17,6 +17,7 @@ const uniforms = {
     u_time: { value: 0.0 },
     u_mouse: { value: { x: null, y: null } },
 	u_eulerAngles: new THREE.Uniform( new THREE.Vector3() ),
+	u_cameraPosition: { value: { x: null, y: null, z: null} },
   }
 
 const material = new THREE.RawShaderMaterial( {
@@ -27,6 +28,11 @@ const material = new THREE.RawShaderMaterial( {
    
 } );
 material.needsUpdate = true;
+
+geometry.computeTangents();
+
+console.log(geometry.getAttribute("normal"));
+console.log(geometry.getAttribute("tangent"));
 
 const loader = new THREE.TextureLoader();
 const mesh = new THREE.Mesh( geometry, material );
@@ -270,6 +276,10 @@ function animation( time ) {
 
 	// mesh.rotation.y = time / 2000;
     uniforms.u_time.value = time;
+
+	// camera position
+	uniforms.u_cameraPosition.value = camera.position;
+
 	renderer.render( scene, camera );
 
 }
