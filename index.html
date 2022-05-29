@@ -31,8 +31,9 @@
         varying vec2 vTexCoord;
         varying float vTime;
         varying vec3 vNormal;
+        varying vec3 vView;
 
-        vec2 perspective;
+        vec3 perspective;
        
 
         void main(){
@@ -40,7 +41,10 @@
             vColor = vec4(1.0);
             vTexCoord = uv;
             vTime = u_time;
-            vNormal = normal;
+            vNormal = normalize(normal);
+            vView = normalize((modelViewMatrix * position).xyz - gl_Position.xyz);
+
+            
         }
 </script>
 
@@ -51,7 +55,8 @@
 
         varying vec2 vTexCoord;
         varying float vTime;
-        varying vec3 vNormal;        
+        varying vec3 vNormal;   
+        varying vec3 vView;
 
         vec2 iResolution = vec2(1.0, 1.0);
 
