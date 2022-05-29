@@ -25,7 +25,7 @@
         uniform mat4 modelViewMatrix;
         uniform mat4 projectionMatrix;
         uniform float u_time;
-        uniform vec3 u_cameraPosition;
+        uniform vec4 u_cameraPosition;
 
         varying lowp vec4 vColor;
         varying vec2 vTexCoord;
@@ -33,7 +33,7 @@
         varying vec3 vNormal;
         varying vec3 vView;
 
-        vec3 perspective;
+        varying vec3 vPerspective;
        
 
         void main(){
@@ -42,9 +42,9 @@
             vTexCoord = uv;
             vTime = u_time;
             vNormal = normalize(normal);
-            vView = normalize((modelViewMatrix * position).xyz - gl_Position.xyz);
-
-            
+            vView = normalize((u_cameraPosition).xyz - gl_Position.xyz);
+            vPerspective.x = dot(vView, normalize(tangent));
+            vPerspective.y = dot(vView, normalize(normal));
         }
 </script>
 
@@ -57,6 +57,7 @@
         varying float vTime;
         varying vec3 vNormal;   
         varying vec3 vView;
+        varying vec3 vPerspective;
 
         vec2 iResolution = vec2(1.0, 1.0);
 
@@ -109,8 +110,8 @@
                 //pos.x *= (1. + sin(vTime)*0.05);
                 //pos.y *= (1. + cos(vTime*1.1)*0.05);
 
-                pos.x -= u_eulerAngles.y * perspeciveFactor;
-                pos.y += u_eulerAngles.x * perspeciveFactor;
+                pos.x -= vPerspective.x * perspeciveFactor;
+                //pos.y += vPerspective.y * perspeciveFactor;
                 
                 //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
                 }
@@ -122,20 +123,20 @@
 
             //Shader Side 1
             if(normalize(vNormal).x == 1.0){
-                gl_FragColor = vec4(0.0, 1.0, 1.0, 1);
+                gl_FragColor = renderTunnel();
             }
 
             //Shader side 2
             if(normalize(vNormal).x == -1.0){
-                gl_FragColor = vec4(0.4, 0.2, 0.7, 1);
+                gl_FragColor = renderTunnel();
             }
             //Shader side 3
             if(normalize(vNormal).y == 1.0){
-                gl_FragColor = vec4(0.0, 1.0, 0, 1);
+                gl_FragColor = renderTunnel();
             }
             //Shader side 4
             if(normalize(vNormal).y == -1.0){
-                gl_FragColor = vec4(0.4, 0.5, 0, 1);
+                gl_FragColor = renderTunnel();
             }
             //Shader side 5
             if(normalize(vNormal).z == 1.0){
@@ -143,7 +144,7 @@
             }
             //Shader side 6
             if(normalize(vNormal).z == -1.0){
-                gl_FragColor = vec4(0.0, 0.0, 1.0, 1);
+                gl_FragColor = renderTunnel();
             }
            
             

@@ -17,7 +17,7 @@ const uniforms = {
     u_time: { value: 0.0 },
     u_mouse: { value: { x: null, y: null } },
 	u_eulerAngles: new THREE.Uniform( new THREE.Vector3() ),
-	u_cameraPosition: { value: { x: null, y: null, z: null} },
+	u_cameraPosition: { value: { x: null, y: null, z: null, a: 1} },
   }
 
 const material = new THREE.RawShaderMaterial( {
