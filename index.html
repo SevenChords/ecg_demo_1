@@ -20,6 +20,7 @@
         attribute vec4 position;
         attribute vec2 uv;
         attribute vec3 normal;
+        // face normals
         attribute vec3 tangent;
 
         uniform mat4 modelViewMatrix;
@@ -32,6 +33,7 @@
         varying float vTime;
         varying vec3 vNormal;
         varying vec3 vView;
+        varying vec3 vBinormal;
 
         varying vec3 vPerspective;
        
@@ -42,9 +44,11 @@
             vTexCoord = uv;
             vTime = u_time;
             vNormal = normalize(normal);
-            vView = normalize((u_cameraPosition).xyz - gl_Position.xyz);
+            vView = normalize(u_cameraPosition.xyz - gl_Position.xyz);
+            vBinormal = normalize(cross(vNormal, normalize(tangent)));
+
             vPerspective.x = dot(vView, normalize(tangent));
-            vPerspective.y = dot(vView, normalize(normal));
+            vPerspective.y = dot(vView, vBinormal);
         }
 </script>
 
@@ -63,7 +67,7 @@
 
         float PI = 3.14159265359;
 
-        float perspeciveFactor = 0.3;
+        float perspeciveFactor = 0.1;
 
         float circle(vec2 pos, vec2 uv, float screenRatio, float size, vec3 color){
             vec2 vectorFromCenter = pos - uv;
@@ -111,7 +115,7 @@
                 //pos.y *= (1. + cos(vTime*1.1)*0.05);
 
                 pos.x -= vPerspective.x * perspeciveFactor;
-                //pos.y += vPerspective.y * perspeciveFactor;
+                pos.y -= vPerspective.y * perspeciveFactor;
                 
                 //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
                 }
