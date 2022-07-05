@@ -1,0 +1,265 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      .popup{
+        margin:0;
+        width:70vw;
+        height:60vh;
+        overflow: scroll;
+        padding:40px;
+        background-color:white;
+        position: fixed;
+        top:5vh;
+        left:5vw;
+       z-index:100000;
+      }
+    </style>
+  </head>
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <!-- we import arjs version without NFT but with marker + location based support -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+      <script>
+            // sourcecode for vertex shader
+    const vsSource = `
+    varying vec2 vUv;
+    uniform float timeMsec; // A-Frame time in milliseconds
+
+    varying lowp vec4 vColor;
+    varying vec2 vTexCoord;
+    varying float vTime;
+    varying vec3 vNormal;
+
+    //position is only vec3 probably
+
+void main() {
+    float time = timeMsec / 1000.0;
+    vUv = uv;
+   
+   
+    vColor = vec4(1.0);
+    vTexCoord = uv;
+    vTime = time;
+    vNormal = normal;
+
+
+
+   
+  
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+    `;
+    
+    // sourcecode for fragment shader
+    const fsSource = `
+    precision mediump float;
+    varying vec2 vUv;
+
+    uniform vec3 u_eulerAngles;
+
+    varying vec2 vTexCoord;
+    varying float vTime;
+    varying vec3 vNormal;        
+
+    vec2 iResolution = vec2(1.0, 1.0);
+
+    float PI = 3.14159265359;
+
+    float perspeciveFactor = 0.3;
+
+    float circle(vec2 pos, vec2 uv, float screenRatio, float size, vec3 color){
+            vec2 vectorFromCenter = pos - uv;
+            vectorFromCenter.y *= screenRatio;
+            float distFromCenter = length(vectorFromCenter);
+            float circle = smoothstep(size, size, distFromCenter);
+            //return color * (1.-circle);
+            return circle;
+        }
+
+        float castleRim(float x, float a, float phi){
+            float t = 1.;
+            float result = a * fract(x/t + phi);
+            return result;
+        }
+
+        float normSin(float x){
+            return sin(x)*0.5 + 0.5;
+        }
+
+        float normCos(float x){
+            return cos(x)*0.5 + 0.5;
+        }
+
+        vec4 renderTunnel(){
+            // Normalized pixel coordinates (from 0 to 1)
+            vec2 uv = vTexCoord/iResolution.xy;
+            float screenRatio = iResolution.y / iResolution.x;
+            vec3 aColor = vec3(0.2, 0.1, 0.5);
+            float circleSize = 0.7;
+            vec2 pos = vec2(0.5, 0.5);
+            float saturation = 0.6;
+            
+            vec3 col = vec3(0.0, 0.0, 0.0);  
+        
+            for(float i = 1.; i < 20.; i++){
+                col += aColor * saturation * circle(pos, uv, screenRatio, circleSize, aColor);
+                circleSize *= 0.8;
+                //circleSize *= 0.8 + castleRim(vTime*1., 0.05, 0.);
+                saturation *= 0.99;
+                //saturation *= 0.99 + castleRim(vTime*1., 0.02, 0.);
+                
+                aColor *= 0.9;
+                //pos.x *= (1. + sin(vTime)*0.05);
+                //pos.y *= (1. + cos(vTime*1.1)*0.05);
+
+                pos.x -= u_eulerAngles.y * perspeciveFactor;
+                pos.y += u_eulerAngles.x * perspeciveFactor;
+                
+                //circleSize *= 1.0 + normSin(vTime*0.9)*0.1;
+                }
+            return vec4(col,1.0);
+        }
+
+        void main()
+        {
+
+            //Shader Side 1
+            if(normalize(vNormal).x == 1.0){
+                gl_FragColor = vec4(0.0, 1.0, 1.0, 1);
+            }
+
+            //Shader side 2
+            if(normalize(vNormal).x == -1.0){
+                gl_FragColor = vec4(0.4, 0.2, 0.7, 1);
+            }
+            //Shader side 3
+            if(normalize(vNormal).y == 1.0){
+                gl_FragColor = vec4(0.0, 1.0, 0, 1);
+            }
+            //Shader side 4
+            if(normalize(vNormal).y == -1.0){
+                gl_FragColor = vec4(0.4, 0.5, 0, 1);
+            }
+            //Shader side 5
+            if(normalize(vNormal).z == 1.0){
+                gl_FragColor = renderTunnel();
+            }
+            //Shader side 6
+            if(normalize(vNormal).z == -1.0){
+                gl_FragColor = vec4(0.0, 0.0, 1.0, 1);
+            }
+           
+            
+        }
+    `;
+        AFRAME.registerShader('circle-tunnel', {
+        schema: {
+            color: {type: 'color', is: 'uniform'},
+            timeMsec: {type: 'time', is: 'uniform'}
+        },
+
+        vertexShader: vsSource,
+        fragmentShader: fsSource
+        });
+
+        AFRAME.registerComponent('change-color-on-hover', {
+    schema: {
+      color: {default: 'red'}
+    },
+
+    init: function () {
+      var data = this.data;
+      var el = this.el;  // <a-box>
+      var defaultColor = el.getAttribute('material').color;
+
+      el.addEventListener('click', function () {
+        el.setAttribute('color', data.color);
+      });
+
+     
+    }
+  });
+ 
+  let timesClicked = 0;
+  AFRAME.registerComponent('clickhandler', {
+        schema: {
+          txt: {default:'default'}
+        },        
+        init: function () {
+          var data = this.data;
+          var el = this.el;        
+          el.addEventListener('click', function () {   
+            timesClicked++;
+            if(timesClicked == 1){
+              return;
+            }
+            let shaderCode; 
+               
+            switch (data.txt) {
+              case 'shader-1':
+                shaderCode = fsSource;
+                break;
+              case 'shader-2':
+                shaderCode = "fsSource";
+              default:
+                break;
+            }
+           document.getElementById("shadercode").innerText = shaderCode;
+           document.getElementById("shader-popup").style.display = "block";
+          });        
+        }
+      });
+
+    </script>
+  <body style="margin : 0px; overflow: hidden;">
+
+    <div class="popup" id="shader-popup" style="display:none">
+      <h4>Shadercode</h4>
+      <h5 onclick="closePopup()">Schließen</h5>
+      <p id="shadercode"></p>
+    </div>
+    <a-scene embedded arjs>
+      <a-marker 
+      type="pattern"
+      url="pattern-Screenshot.patt"
+      >
+        <a-plane rotation="-90 0 0" clickhandler="txt:shader-1" position="0 0 0" material="shader: circle-tunnel" ></a-plane>
+       
+        <a-text value="Tunnel Shader" rotation="-90 0 0" position="-0.5 0 -0.8" height="400px"></a-text>
+        {{-- <a-entity
+          position="0 0 0"
+          scale="0.05 0.05 0.05"
+          gltf-model="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
+        ></a-entity> --}}
+      </a-marker>
+      <a-marker 
+      type="pattern"
+      url="pattern-Screenshot2.patt"
+      >
+      <a-text value="Blue Shader" rotation="-90 0 0" position="-0.5 0 -0.8" height="400px"></a-text>
+      <a-plane rotation="-90 0 0" position="0 0 0" material="opacity: 0.7" color="blue" clickhandler="txt:shader-2"></a-plane>
+      {{-- <a-text mixin="text" position="0 1 0" wrap-count="15" rotation="-90 0 0" color="blue"></a-text> --}}
+        {{-- <a-entity
+          position="0 0 0"
+          scale="0.05 0.05 0.05"
+          gltf-model="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
+        ></a-entity> --}}
+      </a-marker>
+      <a-entity camera></a-entity>
+      <a-entity cursor="rayOrigin:mouse"></a-entity>
+    </a-scene>
+
+
+<script defer>
+  function closePopup(){
+   
+    document.getElementById("shader-popup").style.display = "none";
+  }
+   
+</script>
+  </body>
+</html>
