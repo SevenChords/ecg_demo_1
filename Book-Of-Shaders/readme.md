@@ -1,4 +1,4 @@
-#Book-Of-Shaders (AR-Version)
+Book-Of-Shaders (AR-Version)
 
 
 Um das Script selbst zum Laufen zu bringen, wird ein Server inklusive PHP benötigt.
