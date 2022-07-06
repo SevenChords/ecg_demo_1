@@ -7,17 +7,17 @@ In den PHP-Einstellungen (php.ini) muss der Dateiupload eingestellt werden.
 
 Die Dateien:
 
-book-of-shaders.php
+- book-of-shaders.php
 
-ShaderClass.php
+- ShaderClass.php
 
-upload.php
+- upload.php
 
-config.php
+- config.php
 
-default_vertex.vs
+- default_vertex.vs
 
-ShaderConfig.php (leer)
+- ShaderConfig.php (leer)
 
 
 müssen in einem Verzeichnis abgelegt werden. Außerdem müssen im gleichen Verzeichnis die Ordner "shaders" und "markers" angelegt werden.
